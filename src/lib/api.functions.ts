@@ -49,6 +49,11 @@ export const setClock = createServerFn({ method: "POST" })
     return true;
   });
 
+export const resetDemo = createServerFn({ method: "POST" }).handler(async () => {
+  check(await db().rpc("reset_demo"));
+  return true;
+});
+
 export const releaseBooking = createServerFn({ method: "POST" })
   .inputValidator((d: { bookingId: string; userId: string }) => d)
   .handler(async ({ data }) => {
@@ -155,9 +160,10 @@ export const getCauseSummary = createServerFn({ method: "POST" })
     const np = check(await s.from("nonprofits").select("name, description, tags").eq("id", prof.priority_nonprofit_id).single());
     try {
       const { summarizeCause } = await import("./match.server");
-      return { text: (await summarizeCause(np!, data.amount)) || fallback };
+      if (!np) return { text: fallback, fallback: true };
+      return { text: (await summarizeCause(np, data.amount)) || fallback, fallback: false };
     } catch (e) {
       console.error("cause summary failed", e);
-      return { text: fallback };
+      return { text: fallback, fallback: true };
     }
   });

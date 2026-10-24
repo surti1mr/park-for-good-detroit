@@ -24,13 +24,15 @@ type Ctx = {
   nonprofits: Nonprofit[];
   profiles: Profile[];
   loading: boolean;
+  identityReady: boolean;
   refresh: () => Promise<void>;
 };
 
 const DemoCtx = createContext<Ctx | null>(null);
 
 export function DemoProvider({ children }: { children: ReactNode }) {
-  const [userId, setUserIdState] = useState<string>(DRIVERS[0]!.id);
+  const [userId, setUserIdState] = useState<string>("");
+  const [identityReady, setIdentityReady] = useState(false);
   const [simTime, setSimTime] = useState<Date | null>(null);
   const [spots, setSpots] = useState<Spot[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -42,6 +44,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saved = localStorage.getItem("pif-role");
     if (saved) setUserIdState(saved);
+    setIdentityReady(true);
   }, []);
 
   const setUserId = (id: string) => {
@@ -73,7 +76,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 
   return (
     <DemoCtx.Provider
-      value={{ userId, setUserId, simTime, spots, bookings, donations, nonprofits, profiles, loading, refresh }}
+      value={{ userId, setUserId, simTime, spots, bookings, donations, nonprofits, profiles, loading, identityReady, refresh }}
     >
       {children}
     </DemoCtx.Provider>

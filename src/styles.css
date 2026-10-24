@@ -150,5 +150,14 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
   }
-  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
+  h1, h2, h3 { font-family: var(--font-display); letter-spacing: 0; }
+  p, h1, h2, h3 { overflow-wrap: anywhere; }
+  button, [role="button"] { min-height: 44px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
 }
+
+:root { --welcome-overlay: oklch(0.16 0.015 160 / 0.85); --welcome-clear: oklch(0.16 0.015 160 / 0); }
+.welcome-shade { background: linear-gradient(to top, var(--welcome-overlay), var(--welcome-clear)); }
+.welcome-scene { height: min(62dvh, 560px); }
