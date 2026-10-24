@@ -14,13 +14,213 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          amount: number
+          created_at: string
+          end_time: string
+          id: string
+          spot_id: string
+          start_time: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          end_time: string
+          id?: string
+          spot_id: string
+          start_time: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          end_time?: string
+          id?: string
+          spot_id?: string
+          start_time?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_spot_id_fkey"
+            columns: ["spot_id"]
+            isOneToOne: false
+            referencedRelation: "spots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demo_clock: {
+        Row: {
+          id: number
+          sim_time: string
+        }
+        Insert: {
+          id?: number
+          sim_time: string
+        }
+        Update: {
+          id?: number
+          sim_time?: string
+        }
+        Relationships: []
+      }
+      donations: {
+        Row: {
+          amount: number
+          booking_id: string
+          created_at: string
+          directed_by_user_id: string
+          id: string
+          nonprofit_id: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          booking_id: string
+          created_at: string
+          directed_by_user_id: string
+          id?: string
+          nonprofit_id?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string
+          created_at?: string
+          directed_by_user_id?: string
+          id?: string
+          nonprofit_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donations_directed_by_user_id_fkey"
+            columns: ["directed_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donations_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nonprofits: {
+        Row: {
+          description: string
+          id: string
+          name: string
+          tags: string[]
+        }
+        Insert: {
+          description: string
+          id?: string
+          name: string
+          tags?: string[]
+        }
+        Update: {
+          description?: string
+          id?: string
+          name?: string
+          tags?: string[]
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          email: string | null
+          id: string
+          interest_text: string | null
+          interests: string[]
+          name: string
+          priority_nonprofit_id: string | null
+        }
+        Insert: {
+          email?: string | null
+          id?: string
+          interest_text?: string | null
+          interests?: string[]
+          name: string
+          priority_nonprofit_id?: string | null
+        }
+        Update: {
+          email?: string | null
+          id?: string
+          interest_text?: string | null
+          interests?: string[]
+          name?: string
+          priority_nonprofit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_priority_nonprofit_id_fkey"
+            columns: ["priority_nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spots: {
+        Row: {
+          id: string
+          lot_name: string
+          spot_number: number
+          status: string
+        }
+        Insert: {
+          id?: string
+          lot_name?: string
+          spot_number: number
+          status?: string
+        }
+        Update: {
+          id?: string
+          lot_name?: string
+          spot_number?: number
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      book_spot: {
+        Args: { _hours: number; _spot_id: string; _user_id: string }
+        Returns: string
+      }
+      release_booking: {
+        Args: { _booking_id: string; _user_id: string }
+        Returns: undefined
+      }
+      set_clock: { Args: { _time: string }; Returns: undefined }
+      sync_state: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
