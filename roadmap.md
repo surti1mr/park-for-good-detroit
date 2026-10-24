@@ -1,4 +1,4 @@
-- [ ] Add signed-out welcome screen and explicit demo entry.
-- [ ] Add repeatable reset preserving profiles and priorities.
-- [ ] Polish mobile layouts and AI loading/fallback states.
-- [ ] Verify release, booking, donation, Impact and reset end to end.
+- [x] Add signed-out welcome screen and explicit demo entry.
+- [x] Add repeatable reset preserving profiles and priorities.
+- [x] Polish mobile layouts and AI loading/fallback states.
+- [x] Verify release, booking, donation, Impact and reset end to end.
