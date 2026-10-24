@@ -148,7 +148,7 @@ function FindPage() {
               </div>
               <div className="rounded-2xl border-2 border-primary bg-accent p-4 text-sm text-accent-foreground">
                 <p className="mb-1 flex items-center gap-1 font-semibold"><Sparkles className="h-4 w-4" /> Where your money goes</p>
-                {summary ?? <span className="animate-pulse text-muted-foreground">Writing a quick summary…</span>}
+                {summary ?? <span role="status" className="animate-pulse text-muted-foreground">Writing a quick summary…</span>}
                 {summaryFallback && <p role="status" className="mt-2 text-xs text-muted-foreground">AI summary is unavailable right now. You can still book; 100% goes to a Detroit nonprofit.</p>}
               </div>
               <Button className="w-full rounded-xl" size="lg" disabled={busy} onClick={pay}>

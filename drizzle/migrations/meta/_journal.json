@@ -43,6 +43,13 @@
       "when": 1792861232644,
       "tag": "0005_repeatable_demo_reset",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792861459273,
+      "tag": "0006_reset_demo_safe_update",
+      "breakpoints": true
     }
   ]
 }

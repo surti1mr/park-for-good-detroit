@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { money, useDemo } from "@/lib/demo";
 import { cn } from "@/lib/utils";
-
-export const DETROIT_BASELINE = 4812;
+import { donatedTotal, detroitTotal } from "@/lib/impact";
 
 export const Route = createFileRoute("/impact")({
   head: () => ({
@@ -19,15 +18,14 @@ export const Route = createFileRoute("/impact")({
 });
 
 const label: Record<string, string> = { pending: "Pending", donated: "Donated", auto_donated: "Auto-donated" };
-const given = (s: string) => s === "donated" || s === "auto_donated";
 
 function ImpactPage() {
   const { userId, donations, bookings, nonprofits } = useDemo();
   const mine = donations.filter((d) => d.directed_by_user_id === userId);
-  const directed = mine.filter((d) => given(d.status)).reduce((a, d) => a + Number(d.amount), 0);
+  const directed = donatedTotal(mine);
   // Counts every spot the user released (stays counted after another driver takes it).
   const shared = bookings.filter((b) => b.user_id === userId && b.released_at).length;
-  const detroit = DETROIT_BASELINE + donations.filter((d) => given(d.status)).reduce((a, d) => a + Number(d.amount), 0);
+  const detroit = detroitTotal(donations);
   const fmtDate = (s: string) => new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/Detroit" });
 
   return (
