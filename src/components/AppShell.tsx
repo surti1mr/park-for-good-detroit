@@ -14,13 +14,17 @@ const NAV = [
 ] as const;
 
 function DemoPanel({ onClose }: { onClose: () => void }) {
-  const { userId, setUserId, simTime } = useDemo();
-  const setClock = async (iso: string) => {
+  const { userId, setUserId, simTime, refresh } = useDemo();
+  const base = simTime ?? new Date();
+  const curHour = simTime ? Number(simTime.toLocaleString("en-US", { hour: "numeric", hour12: false, timeZone: "America/Detroit" })) : -1;
+  const setClock = async (iso: string, label: string) => {
     const { error } = await supabase.rpc("set_clock", { _time: iso });
-    if (error) toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Clock set: ${label}`);
+    await refresh();
   };
   return (
-    <div className="absolute right-3 top-14 z-50 w-72 rounded-2xl border bg-card p-4 shadow-xl">
+    <div className="fixed right-3 top-14 z-[100] w-72 rounded-2xl border bg-card p-4 shadow-xl">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold">Demo controls</h3>
         <button onClick={onClose} aria-label="Close"><X className="h-4 w-4" /></button>
@@ -45,17 +49,20 @@ function DemoPanel({ onClose }: { onClose: () => void }) {
         {[9, 13, 15, 21].map((h) => (
           <button
             key={h}
-            disabled={!simTime}
-            onClick={() => simTime && setClock(atHour(simTime, h))}
-            className="rounded-xl bg-secondary px-2 py-2 text-xs font-medium"
+            type="button"
+            onClick={() => setClock(atHour(base, h), h > 12 ? `${h - 12}:00 PM` : `${h}:00 AM`)}
+            className={cn(
+              "cursor-pointer rounded-xl px-2 py-2 text-xs font-medium active:scale-95",
+              curHour === h ? "bg-primary text-primary-foreground" : "bg-secondary",
+            )}
           >
             {h > 12 ? `${h - 12}:00 PM` : `${h}:00 AM`}
           </button>
         ))}
         <button
-          disabled={!simTime}
-          onClick={() => simTime && setClock(new Date(simTime.getTime() + 7 * 864e5).toISOString())}
-          className="rounded-xl bg-secondary px-2 py-2 text-xs font-medium"
+          type="button"
+          onClick={() => setClock(new Date(base.getTime() + 7 * 864e5).toISOString(), "+7 days")}
+          className="cursor-pointer rounded-xl active:scale-95 bg-secondary px-2 py-2 text-xs font-medium"
         >
           +7 days
         </button>
