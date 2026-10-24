@@ -10,6 +10,8 @@ export const Route = createFileRoute("/profile")({
       { name: "description", content: "Your interests and priority Detroit nonprofit." },
       { property: "og:title", content: "Profile — ParkItForward" },
       { property: "og:description", content: "Choose the nonprofit your released spots support." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ProfilePage,

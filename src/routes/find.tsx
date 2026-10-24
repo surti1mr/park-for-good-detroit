@@ -31,6 +31,7 @@ function FindPage() {
   const [step, setStep] = useState<Step>("sheet");
   const [busy, setBusy] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
+  const [summaryFallback, setSummaryFallback] = useState(false);
   const [done, setDone] = useState<{ n: number; end: string; total: number; empty?: boolean } | null>(null);
 
   const spot = spots.find((s) => s.id === selId);
@@ -44,10 +45,11 @@ function FindPage() {
   useEffect(() => {
     if (step !== "confirm" || !spot) return;
     setSummary(null);
+    setSummaryFallback(false);
     let live = true;
     getCauseSummary({ data: { spotId: spot.id, amount: total } }).then(
-      (r) => live && setSummary(r.text),
-      () => live && setSummary(`Your $${total} will likely support a Detroit nonprofit.`),
+      (r) => { if (live) { setSummary(r.text); setSummaryFallback("fallback" in r && r.fallback === true); } },
+      () => { if (live) { setSummary(`Your $${total} will likely support a Detroit nonprofit.`); setSummaryFallback(true); } },
     );
     return () => { live = false; };
   }, [step, spot?.id, total]);
@@ -91,7 +93,7 @@ function FindPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Find a spot</h1>
-      <div className="flex gap-4 rounded-2xl border px-4 py-2 text-xs font-medium">
+      <div className="flex flex-wrap gap-x-4 gap-y-2 rounded-2xl border px-4 py-3 text-xs font-medium">
         <Legend c="bg-spot-empty" l="Empty" />
         <Legend c="bg-spot-booked" l="Booked" />
         <Legend c="bg-spot-released" l="Released · bookable" />
@@ -100,7 +102,7 @@ function FindPage() {
       <p className="text-center text-sm text-muted-foreground">Tap a gray spot to park, or a green spot to book time another driver shared.</p>
 
       <Sheet open={open} onOpenChange={(o) => !o && close()}>
-        <SheetContent side="bottom" className="mx-auto max-w-md rounded-t-3xl">
+        <SheetContent side="bottom" className="mx-auto max-h-[90dvh] max-w-md overflow-y-auto rounded-t-3xl pb-[calc(1rem+env(safe-area-inset-bottom))]">
           {step === "done" && done ? (
             <div className="space-y-4 py-4 text-center">
               <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
@@ -140,16 +142,17 @@ function FindPage() {
                 <SheetDescription>{spot.lot_name}</SheetDescription>
               </SheetHeader>
               <div className="rounded-2xl bg-muted p-4 text-sm">
-                <div className="flex justify-between"><span>Time</span><span className="font-semibold">{fmtTime(now)} – {fmtTime(rel.end_time)}</span></div>
+                <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-3"><span>Time</span><span className="text-right font-semibold">{fmtTime(now)} – {fmtTime(rel.end_time)}</span></div>
                 <div className="mt-1 flex justify-between"><span>{hours} hr × $1</span><span className="font-display text-xl font-bold">{money(total)}</span></div>
                 <p className="mt-2 text-xs text-muted-foreground">Payment is final. 100% goes to a Detroit nonprofit.</p>
               </div>
               <div className="rounded-2xl border-2 border-primary bg-accent p-4 text-sm text-accent-foreground">
                 <p className="mb-1 flex items-center gap-1 font-semibold"><Sparkles className="h-4 w-4" /> Where your money goes</p>
                 {summary ?? <span className="animate-pulse text-muted-foreground">Writing a quick summary…</span>}
+                {summaryFallback && <p role="status" className="mt-2 text-xs text-muted-foreground">AI summary is unavailable right now. You can still book; 100% goes to a Detroit nonprofit.</p>}
               </div>
               <Button className="w-full rounded-xl" size="lg" disabled={busy} onClick={pay}>
-                <Heart className="h-4 w-4 fill-current" /> Pay {money(total)}
+                <Heart className="h-4 w-4 fill-current" /> {busy ? "Processing…" : `Pay ${money(total)}`}
               </Button>
               <Button variant="ghost" className="w-full" onClick={() => setStep("sheet")}>Back</Button>
             </div>

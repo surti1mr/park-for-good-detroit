@@ -28,11 +28,12 @@ export function DonationCards() {
   const [ranked, setRanked] = useState<{ id: string; reason: string }[] | null>(null);
   const [pick, setPick] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [fallback, setFallback] = useState(false);
   const [thanks, setThanks] = useState<{ amount: number; name: string } | null>(null);
 
   const openChoice = (d: Donation) => {
-    setOpen(d); setThanks(null); setPick(me?.priority_nonprofit_id ?? null); setRanked(null);
-    rankForUser({ data: { userId } }).then(setRanked, () => setRanked(nonprofits.map((n) => ({ id: n.id, reason: n.description }))));
+    setOpen(d); setThanks(null); setPick(me?.priority_nonprofit_id ?? null); setRanked(null); setFallback(false);
+    rankForUser({ data: { userId } }).then((r) => { setRanked(r.matches); setFallback(r.fallback); }, () => { setFallback(true); setRanked(nonprofits.map((n) => ({ id: n.id, reason: n.description }))); });
   };
   // Priority first, labeled; rest in AI order.
   const list = ranked
@@ -57,20 +58,20 @@ export function DonationCards() {
           <p className="flex-1 font-medium">
             {money(Number(d.amount))} was donated to {nonprofits.find((n) => n.id === d.nonprofit_id)?.name ?? priorityName} (your priority).
           </p>
-          <button aria-label="Dismiss" onClick={() => dismiss(d.id)}><X className="h-4 w-4" /></button>
+          <Button variant="ghost" size="icon" aria-label="Dismiss" onClick={() => dismiss(d.id)}><X className="h-4 w-4" /></Button>
         </div>
       ))}
       {ready.map((d) => (
-        <button key={d.id} onClick={() => openChoice(d)} className="w-full rounded-3xl bg-primary p-5 text-left text-primary-foreground">
+        <Button key={d.id} onClick={() => openChoice(d)} className="h-auto w-full flex-col items-start whitespace-normal rounded-3xl bg-primary p-5 text-left text-primary-foreground">
           <p className="font-display text-lg font-bold">Your released spot raised {money(Number(d.amount))}. Choose where it goes.</p>
           <p className="mt-1 text-sm opacity-90">If you don't choose within 7 days, it goes to {priorityName}.</p>
-        </button>
+        </Button>
       ))}
       {waiting.map((d) => (
         <div key={d.id} className="flex items-center gap-3 rounded-3xl border p-4 text-sm">
           <Hourglass className="h-4 w-4 text-muted-foreground" />
           <span className="font-semibold">{money(Number(d.amount))}</span>
-          <span className="text-muted-foreground">Pending · you'll choose after {fmtTime(endOf(d)!)}</span>
+          <span className="min-w-0 text-muted-foreground">Pending · you'll choose after {fmtTime(endOf(d) ?? d.created_at)}</span>
         </div>
       ))}
 
@@ -92,22 +93,23 @@ export function DonationCards() {
                 <SheetDescription>Ranked for your interests.</SheetDescription>
               </SheetHeader>
               {!list && <p className="animate-pulse py-6 text-center text-sm text-muted-foreground">Finding the best fits for you…</p>}
+              {fallback && <p role="status" className="text-sm text-muted-foreground">AI matching is unavailable right now. You can still choose any nonprofit below.</p>}
               {list?.map((m) => {
                 const n = nonprofits.find((x) => x.id === m.id);
                 if (!n) return null;
                 return (
-                  <button key={m.id} onClick={() => setPick(m.id)}
-                    className={cn("w-full rounded-2xl border-2 p-3 text-left", pick === m.id ? "border-primary bg-accent" : "border-border")}>
+                  <Button variant="outline" key={m.id} onClick={() => setPick(m.id)}
+                    className={cn("h-auto w-full flex-col items-start whitespace-normal rounded-2xl border-2 p-3 text-left", pick === m.id ? "border-primary bg-accent" : "border-border")}>
                     <p className="text-sm font-semibold">
                       {n.name}
                       {n.id === me?.priority_nonprofit_id && <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-[10px] text-primary-foreground">Your priority</span>}
                     </p>
                     <p className="text-xs text-muted-foreground">{m.reason}</p>
-                  </button>
+                  </Button>
                 );
               })}
               <Button className="sticky bottom-0 w-full rounded-xl" size="lg" disabled={!pick || busy} onClick={donate}>
-                Donate {open ? money(Number(open.amount)) : ""}
+                {busy ? "Sending…" : `Donate ${open ? money(Number(open.amount)) : ""}`}
               </Button>
             </div>
           )}

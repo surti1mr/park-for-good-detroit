@@ -35,7 +35,7 @@ function ImpactPage() {
       <h1 className="text-2xl font-bold">Your impact</h1>
       <div className="rounded-3xl bg-foreground p-6 text-background">
         <p className="text-xs uppercase tracking-wide opacity-70">Detroit total this month</p>
-        <p className="font-display text-5xl font-bold">{money(detroit)}</p>
+        <p className="font-display text-4xl font-bold">{money(detroit)}</p>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-3xl bg-primary p-5 text-primary-foreground">
@@ -52,15 +52,15 @@ function ImpactPage() {
         {mine.length === 0 && <p className="rounded-2xl bg-muted p-5 text-center text-sm text-muted-foreground">No donations yet. Release a spot to start.</p>}
         <div className="space-y-2">
           {mine.map((d) => (
-            <div key={d.id} className="flex items-center gap-3 rounded-2xl border p-4">
-              <div className="flex-1">
+            <div key={d.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border p-4">
+              <div className="min-w-0">
                 <p className="text-sm font-semibold">{nonprofits.find((n) => n.id === d.nonprofit_id)?.name ?? "Not chosen yet"}</p>
                 <p className="text-xs text-muted-foreground">{fmtDate(d.donated_at ?? d.created_at)}</p>
               </div>
               <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", d.status === "pending" ? "bg-muted text-muted-foreground" : "bg-accent text-accent-foreground")}>
                 {label[d.status] ?? d.status}
               </span>
-              <span className="font-display font-bold">{money(Number(d.amount))}</span>
+              <span className="col-start-2 font-display font-bold">{money(Number(d.amount))}</span>
             </div>
           ))}
         </div>

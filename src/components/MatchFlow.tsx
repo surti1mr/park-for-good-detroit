@@ -26,12 +26,18 @@ export function MatchFlow({ userId, onDone, finishLabel }: { userId: string; onD
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [fallback, setFallback] = useState(false);
 
   const run = async () => {
     setBusy(true);
     try {
       await saveInterests({ data: { userId, interests, interestText: text } });
-      setMatches(await findMatches({ data: { userId } }));
+      setFallback(false);
+      try { setMatches(await findMatches({ data: { userId } })); }
+      catch {
+        setFallback(true);
+        setMatches([...nonprofits].sort((a, b) => b.tags.filter((t) => interests.includes(t)).length - a.tags.filter((t) => interests.includes(t)).length).slice(0, 3).map((n) => ({ id: n.id, reason: n.description })));
+      }
       setPicked(null);
     } catch (e) {
       toast.error((e as Error).message || "Couldn't find matches. Try again.");
@@ -59,15 +65,16 @@ export function MatchFlow({ userId, onDone, finishLabel }: { userId: string; onD
           <h1 className="text-2xl font-bold">Your top matches</h1>
           <p className="text-sm text-muted-foreground">Pick one as your Priority Nonprofit.</p>
         </div>
+        {fallback && <p role="status" className="text-sm text-muted-foreground">AI matching is unavailable right now. Here are real nonprofits based on your interests.</p>}
         {matches.map((m) => {
           const n = nonprofits.find((x) => x.id === m.id);
           if (!n) return null;
           const on = picked === m.id;
           return (
-            <button
+            <Button variant="outline"
               key={m.id}
               onClick={() => setPicked(m.id)}
-              className={cn("w-full rounded-3xl border p-5 text-left transition", on && "border-2 border-primary bg-accent")}
+              className={cn("h-auto w-full flex-col items-stretch whitespace-normal rounded-3xl border p-5 text-left transition", on && "border-2 border-primary bg-accent")}
             >
               <div className="flex items-start justify-between gap-2">
                 <p className="font-semibold">{n.name}</p>
@@ -79,15 +86,15 @@ export function MatchFlow({ userId, onDone, finishLabel }: { userId: string; onD
                   <span key={t} className="rounded-full bg-secondary px-2 py-0.5 text-[11px] capitalize text-secondary-foreground">{t}</span>
                 ))}
               </div>
-            </button>
+            </Button>
           );
         })}
         <Button className="w-full rounded-xl" size="lg" disabled={!picked || busy} onClick={finish}>
           {finishLabel}
         </Button>
-        <button onClick={() => setMatches(null)} className="w-full text-center text-sm text-muted-foreground underline">
+        <Button variant="ghost" onClick={() => setMatches(null)} className="w-full text-center text-sm text-muted-foreground underline">
           Change my interests
-        </button>
+        </Button>
       </div>
     );
   }
@@ -97,13 +104,13 @@ export function MatchFlow({ userId, onDone, finishLabel }: { userId: string; onD
       <h1 className="text-2xl font-bold">What do you care about?</h1>
       <div className="flex flex-wrap gap-2">
         {INTEREST_CHIPS.map(({ label, tag }) => (
-          <button
+          <Button variant="outline"
             key={tag}
             onClick={() => setInterests((i) => (i.includes(tag) ? i.filter((x) => x !== tag) : [...i, tag]))}
             className={cn("rounded-full border px-4 py-2 text-sm", interests.includes(tag) && "border-primary bg-accent font-medium text-accent-foreground")}
           >
             {label}
-          </button>
+          </Button>
         ))}
       </div>
       <textarea

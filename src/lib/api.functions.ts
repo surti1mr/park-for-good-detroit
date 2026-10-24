@@ -49,6 +49,11 @@ export const setClock = createServerFn({ method: "POST" })
     return true;
   });
 
+export const resetDemo = createServerFn({ method: "POST" }).handler(async () => {
+  check(await db().rpc("reset_demo"));
+  return true;
+});
+
 export const releaseBooking = createServerFn({ method: "POST" })
   .inputValidator((d: { bookingId: string; userId: string }) => d)
   .handler(async ({ data }) => {
@@ -78,10 +83,11 @@ export const rankForUser = createServerFn({ method: "POST" })
     const nps = check(await s.from("nonprofits").select("id, name, description, tags")) ?? [];
     const { rankNonprofits, completeRanking } = await import("./match.server");
     try {
-      return await rankNonprofits(p!.interests, p!.interest_text ?? "", nps);
+      if (!p) throw new Error("Profile not found");
+      return { matches: await rankNonprofits(p.interests, p.interest_text ?? "", nps), fallback: false };
     } catch (e) {
       console.error("ranking failed", e);
-      return completeRanking([], nps);
+      return { matches: completeRanking([], nps), fallback: true };
     }
   });
 
@@ -155,9 +161,10 @@ export const getCauseSummary = createServerFn({ method: "POST" })
     const np = check(await s.from("nonprofits").select("name, description, tags").eq("id", prof.priority_nonprofit_id).single());
     try {
       const { summarizeCause } = await import("./match.server");
-      return { text: (await summarizeCause(np!, data.amount)) || fallback };
+      if (!np) return { text: fallback, fallback: true };
+      return { text: (await summarizeCause(np, data.amount)) || fallback, fallback: false };
     } catch (e) {
       console.error("cause summary failed", e);
-      return { text: fallback };
+      return { text: fallback, fallback: true };
     }
   });

@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           end_time: string
           id: string
+          is_demo_seed: boolean
           parent_booking_id: string | null
           released_at: string | null
           spot_id: string
@@ -32,6 +33,7 @@ export type Database = {
           created_at?: string
           end_time: string
           id?: string
+          is_demo_seed?: boolean
           parent_booking_id?: string | null
           released_at?: string | null
           spot_id: string
@@ -44,6 +46,7 @@ export type Database = {
           created_at?: string
           end_time?: string
           id?: string
+          is_demo_seed?: boolean
           parent_booking_id?: string | null
           released_at?: string | null
           spot_id?: string
@@ -239,6 +242,7 @@ export type Database = {
         Args: { _booking_id: string; _user_id: string }
         Returns: undefined
       }
+      reset_demo: { Args: never; Returns: undefined }
       set_clock: { Args: { _time: string }; Returns: undefined }
       sync_state: { Args: never; Returns: undefined }
     }

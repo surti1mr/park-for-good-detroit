@@ -10,6 +10,8 @@ export const Route = createFileRoute("/match")({
       { name: "description", content: "Tell us what you care about and we'll suggest Detroit nonprofits to support." },
       { property: "og:title", content: "Find your nonprofit match — ParkItForward" },
       { property: "og:description", content: "Get matched with Detroit nonprofits you care about." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: MatchPage,
