@@ -13,6 +13,8 @@ export const Route = createFileRoute("/signup")({
       { name: "description", content: "Join ParkItForward and get matched with a Detroit nonprofit you care about." },
       { property: "og:title", content: "Sign up — ParkItForward" },
       { property: "og:description", content: "Join and get matched with a Detroit nonprofit." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: SignupPage,

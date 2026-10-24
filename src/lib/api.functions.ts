@@ -83,10 +83,11 @@ export const rankForUser = createServerFn({ method: "POST" })
     const nps = check(await s.from("nonprofits").select("id, name, description, tags")) ?? [];
     const { rankNonprofits, completeRanking } = await import("./match.server");
     try {
-      return await rankNonprofits(p!.interests, p!.interest_text ?? "", nps);
+      if (!p) throw new Error("Profile not found");
+      return { matches: await rankNonprofits(p.interests, p.interest_text ?? "", nps), fallback: false };
     } catch (e) {
       console.error("ranking failed", e);
-      return completeRanking([], nps);
+      return { matches: completeRanking([], nps), fallback: true };
     }
   });
 

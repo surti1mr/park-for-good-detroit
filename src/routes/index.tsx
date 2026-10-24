@@ -24,6 +24,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "See your parking session and release your spot early to fund a Detroit nonprofit." },
       { property: "og:title", content: "ParkItForward Detroit" },
       { property: "og:description", content: "Leave early, give back. Released parking time funds Detroit nonprofits." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: ParkPage,
@@ -65,10 +67,10 @@ function ParkPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 rounded-2xl bg-muted px-4 py-3 text-sm">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-2xl bg-muted px-4 py-3 text-sm">
         <Clock className="h-4 w-4 text-muted-foreground" />
         <span className="text-muted-foreground">Current time</span>
-        <span className="ml-auto font-semibold">{simTime ? fmtTime(simTime) : "…"}</span>
+        <span className="col-span-2 font-semibold">{simTime ? fmtTime(simTime) : "…"}</span>
       </div>
 
       <DonationCards />
@@ -84,7 +86,7 @@ function ParkPage() {
       ) : (
         <>
           <div className={session.status === "active" ? "rounded-3xl bg-spot-booked p-6 text-primary-foreground" : "rounded-3xl bg-spot-released p-6 text-primary-foreground"}>
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
               <span className="opacity-90">{spot.lot_name}</span>
               <span className="rounded-full bg-background/20 px-3 py-1 text-xs font-semibold">
                 {session.status === "active"
@@ -145,7 +147,7 @@ function ParkPage() {
                 release();
               }}
             >
-              Release spot
+              {busy ? "Releasing…" : "Release spot"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
