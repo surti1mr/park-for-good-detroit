@@ -64,12 +64,25 @@ export const bookSpot = createServerFn({ method: "POST" })
   });
 
 export const chooseDonation = createServerFn({ method: "POST" })
-  .inputValidator((d: { donationId: string; nonprofitId: string }) => d)
+  .inputValidator((d: { donationId: string; userId: string; nonprofitId: string }) => d)
   .handler(async ({ data }) => {
-    check(
-      await db().from("donations").update({ nonprofit_id: data.nonprofitId, status: "donated" }).eq("id", data.donationId).eq("status", "pending"),
-    );
+    check(await db().rpc("choose_donation", { _donation_id: data.donationId, _user_id: data.userId, _nonprofit_id: data.nonprofitId }));
     return true;
+  });
+
+export const rankForUser = createServerFn({ method: "POST" })
+  .inputValidator((d: { userId: string }) => d)
+  .handler(async ({ data }) => {
+    const s = db();
+    const p = check(await s.from("profiles").select("interests, interest_text").eq("id", data.userId).single());
+    const nps = check(await s.from("nonprofits").select("id, name, description, tags")) ?? [];
+    const { rankNonprofits, completeRanking } = await import("./match.server");
+    try {
+      return await rankNonprofits(p!.interests, p!.interest_text ?? "", nps);
+    } catch (e) {
+      console.error("ranking failed", e);
+      return completeRanking([], nps);
+    }
   });
 
 export const saveProfile = createServerFn({ method: "POST" })

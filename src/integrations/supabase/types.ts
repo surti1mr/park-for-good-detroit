@@ -96,6 +96,7 @@ export type Database = {
           booking_id: string
           created_at: string
           directed_by_user_id: string
+          donated_at: string | null
           id: string
           nonprofit_id: string | null
           status: string
@@ -105,6 +106,7 @@ export type Database = {
           booking_id: string
           created_at: string
           directed_by_user_id: string
+          donated_at?: string | null
           id?: string
           nonprofit_id?: string | null
           status?: string
@@ -114,6 +116,7 @@ export type Database = {
           booking_id?: string
           created_at?: string
           directed_by_user_id?: string
+          donated_at?: string | null
           id?: string
           nonprofit_id?: string | null
           status?: string
@@ -227,6 +230,10 @@ export type Database = {
       book_spot: {
         Args: { _hours: number; _spot_id: string; _user_id: string }
         Returns: string
+      }
+      choose_donation: {
+        Args: { _donation_id: string; _nonprofit_id: string; _user_id: string }
+        Returns: undefined
       }
       release_booking: {
         Args: { _booking_id: string; _user_id: string }
