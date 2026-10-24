@@ -90,9 +90,9 @@ export function DonationCards() {
             <div className="space-y-3 py-2">
               <SheetHeader>
                 <SheetTitle>Choose where {open ? money(Number(open.amount)) : ""} goes</SheetTitle>
-                <SheetDescription>Ranked for your interests.</SheetDescription>
+                <SheetDescription>{fallback ? "Choose a Detroit nonprofit." : "Ranked for your interests."}</SheetDescription>
               </SheetHeader>
-              {!list && <p className="animate-pulse py-6 text-center text-sm text-muted-foreground">Finding the best fits for you…</p>}
+              {!list && <p role="status" className="animate-pulse py-6 text-center text-sm text-muted-foreground">Finding the best fits for you…</p>}
               {fallback && <p role="status" className="text-sm text-muted-foreground">AI matching is unavailable right now. You can still choose any nonprofit below.</p>}
               {list?.map((m) => {
                 const n = nonprofits.find((x) => x.id === m.id);

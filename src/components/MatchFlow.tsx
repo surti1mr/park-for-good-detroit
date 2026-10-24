@@ -100,7 +100,7 @@ export function MatchFlow({ userId, onDone, finishLabel }: { userId: string; onD
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" aria-busy={busy}>
       <h1 className="text-2xl font-bold">What do you care about?</h1>
       <div className="flex flex-wrap gap-2">
         {INTEREST_CHIPS.map(({ label, tag }) => (

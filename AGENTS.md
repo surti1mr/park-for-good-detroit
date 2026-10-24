@@ -14,3 +14,4 @@
 - Identity is demo-only: the selected profile id is stored in localStorage; sign-up creates a profiles row (no auth accounts).
 - Missing demo identity shows the welcome screen after hydration; explicit entry selects Driver 1, preventing silent sign-in.
 - Demo reset is an atomic database RPC using marked seed bookings, preserving profiles and priorities while restoring today's Detroit schedule.
+- Impact monetary totals live in a shared pure helper with tests, keeping pending payments out of donated totals.

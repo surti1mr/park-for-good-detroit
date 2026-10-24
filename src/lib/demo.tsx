@@ -91,7 +91,7 @@ export function useDemo() {
 
 export const fmtTime = (d: Date | string) =>
   new Date(d).toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Detroit" });
-export const money = (n: number) => `$${Number(n).toFixed(2)}`;
+export const money = (n: number) => Number(n).toLocaleString("en-US", { style: "currency", currency: "USD" });
 
 /** Build a Detroit-local timestamp for the sim day at a given hour. */
 export function atHour(base: Date, hour: number) {
