@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Heart } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { bookSpot } from "@/lib/api.functions";
 import { SpotMap } from "@/components/SpotMap";
 import { Button } from "@/components/ui/button";
 import { fmtTime, money, useDemo } from "@/lib/demo";
@@ -30,7 +30,7 @@ function FindPage() {
 
   const book = async (spotId: string) => {
     setBusy(true);
-    const { error } = await supabase.rpc("book_spot", { _spot_id: spotId, _user_id: userId, _hours: 1 });
+    const error = await bookSpot({ data: { spotId, userId, hours: 1 } }).then(() => null, (e: Error) => e);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Booked! Your payment is going to a Detroit nonprofit 💚");

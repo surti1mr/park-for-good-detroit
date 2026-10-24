@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { Car, MapPin, Heart, User, SlidersHorizontal, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { setClock as setClockFn } from "@/lib/api.functions";
 import { DRIVERS, atHour, fmtTime, useDemo } from "@/lib/demo";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -18,8 +18,7 @@ function DemoPanel({ onClose }: { onClose: () => void }) {
   const base = simTime ?? new Date();
   const curHour = simTime ? Number(simTime.toLocaleString("en-US", { hour: "numeric", hour12: false, timeZone: "America/Detroit" })) : -1;
   const setClock = async (iso: string, label: string) => {
-    const { error } = await supabase.rpc("set_clock", { _time: iso });
-    if (error) { toast.error(error.message); return; }
+    try { await setClockFn({ data: { time: iso } }); } catch (e) { toast.error((e as Error).message); return; }
     toast.success(`Clock set: ${label}`);
     await refresh();
   };

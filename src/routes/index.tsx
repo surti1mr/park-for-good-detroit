@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { bookSpot, releaseBooking } from "@/lib/api.functions";
 import { SpotMap } from "@/components/SpotMap";
 import { Button } from "@/components/ui/button";
 import { fmtTime, money, useDemo, type Spot } from "@/lib/demo";
@@ -30,7 +30,7 @@ function ParkPage() {
   const release = async () => {
     if (!active) return undefined;
     setBusy(true);
-    const { error } = await supabase.rpc("release_booking", { _booking_id: active.id, _user_id: userId });
+    const error = await releaseBooking({ data: { bookingId: active.id, userId } }).then(() => null, (e: Error) => e);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Spot released! If someone books it, they pay a nonprofit you choose.");
@@ -40,7 +40,7 @@ function ParkPage() {
   const book = async () => {
     if (!sel) return undefined;
     setBusy(true);
-    const { error } = await supabase.rpc("book_spot", { _spot_id: sel.id, _user_id: userId, _hours: hours });
+    const error = await bookSpot({ data: { spotId: sel.id, userId, hours } }).then(() => null, (e: Error) => e);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success(`Booked spot ${sel.spot_number} · ${money(hours)} (simulated)`);
