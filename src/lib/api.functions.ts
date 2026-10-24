@@ -127,3 +127,24 @@ export const findMatches = createServerFn({ method: "POST" })
     const nonprofits = check(await s.from("nonprofits").select("id, name, description, tags")) ?? [];
     return matchNonprofits(profile!.interests, profile!.interest_text ?? "", nonprofits);
   });
+
+export const getCauseSummary = createServerFn({ method: "POST" })
+  .inputValidator((d: { spotId: string; amount: number }) => d)
+  .handler(async ({ data }) => {
+    const s = db();
+    const rel = check(
+      await s.from("bookings").select("user_id").eq("spot_id", data.spotId).eq("status", "released").order("end_time", { ascending: false }).limit(1).maybeSingle(),
+    );
+    const fallback = `Your $${data.amount} will likely support a Detroit nonprofit chosen by the driver who shared this spot.`;
+    if (!rel) return { text: fallback };
+    const prof = check(await s.from("profiles").select("priority_nonprofit_id").eq("id", rel.user_id).single());
+    if (!prof?.priority_nonprofit_id) return { text: fallback };
+    const np = check(await s.from("nonprofits").select("name, description, tags").eq("id", prof.priority_nonprofit_id).single());
+    try {
+      const { summarizeCause } = await import("./match.server");
+      return { text: (await summarizeCause(np!, data.amount)) || fallback };
+    } catch (e) {
+      console.error("cause summary failed", e);
+      return { text: fallback };
+    }
+  });

@@ -76,3 +76,24 @@ export async function matchNonprofits(interests: string[], interestText: string,
   }
   return fillByTags(filterMatches(raw, nonprofits), interests, nonprofits);
 }
+
+/** Two friendly sentences about what the releasing driver's priority nonprofit likely supports. */
+export async function summarizeCause(np: { name: string; description: string; tags: string[] }, amount: number) {
+  const apiKey = process.env["LOVABLE_API_KEY"];
+  if (!apiKey) throw new Error("AI is not configured");
+  const provider = createOpenAI({
+    baseURL: "https://ai.gateway.lovable.dev/v1",
+    apiKey,
+    headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+  });
+  const dollars = `$${Number.isInteger(amount) ? amount : amount.toFixed(2)}`;
+  const result = streamText({
+    model: provider.responses("openai/gpt-6-astra") as unknown as Parameters<typeof streamText>[0]["model"],
+    instructions: `Write exactly 2 short, friendly sentences for a driver about to pay ${dollars} for parking. Start with "Your ${dollars} will likely support" and describe the cause using ONLY the nonprofit's name, description and tags. Always say "likely" because the destination can still change. Never mention any person. Never include statistics, numbers (other than ${dollars}), meals counts, or impact claims not in the description. Plain text only.`,
+    messages: [{ role: "user", content: JSON.stringify({ name: np.name, description: np.description, tags: np.tags }) }],
+    providerOptions: {
+      openai: { store: false, forceReasoning: true, reasoningEffort: "low", reasoningSummary: "auto", include: ["reasoning.encrypted_content"] },
+    },
+  });
+  return (await result.text).trim();
+}

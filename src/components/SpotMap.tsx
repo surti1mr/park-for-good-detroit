@@ -37,19 +37,7 @@ export function SpotMap({
           </button>
         ))}
       </div>
-      <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
-        <Legend c="bg-spot-empty" l="Empty" />
-        <Legend c="bg-spot-booked" l="Booked" />
-        <Legend c="bg-spot-released" l="Released" />
-      </div>
     </div>
   );
 }
 
-function Legend({ c, l }: { c: string; l: string }) {
-  return (
-    <span className="flex items-center gap-1">
-      <span className={cn("h-3 w-3 rounded", c)} /> {l}
-    </span>
-  );
-}

@@ -1,11 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Heart } from "lucide-react";
-import { bookSpot } from "@/lib/api.functions";
+import { CheckCircle2, Heart, Sparkles } from "lucide-react";
+import { bookSpot, getCauseSummary } from "@/lib/api.functions";
 import { SpotMap } from "@/components/SpotMap";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { fmtTime, money, useDemo } from "@/lib/demo";
+import { releasedPrice } from "@/lib/pricing";
 
 export const Route = createFileRoute("/find")({
   head: () => ({
@@ -14,83 +16,122 @@ export const Route = createFileRoute("/find")({
       { name: "description", content: "Book parking time other drivers released early. Every dollar goes to a Detroit nonprofit." },
       { property: "og:title", content: "Find released spots — ParkItForward" },
       { property: "og:description", content: "Book released parking time; 100% goes to a Detroit nonprofit." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: FindPage,
 });
 
+type Step = "sheet" | "confirm" | "done";
+
 function FindPage() {
   const { userId, simTime, spots, bookings, refresh } = useDemo();
+  const [selId, setSelId] = useState<string | null>(null);
+  const [step, setStep] = useState<Step>("sheet");
   const [busy, setBusy] = useState(false);
-  const [sel, setSel] = useState<string | null>(null);
-  const [hours, setHours] = useState(2);
-  const selSpot = spots.find((x) => x.id === sel && x.status === "empty");
-  const bookEmpty = async () => {
-    if (!selSpot) return;
-    setBusy(true);
-    const error = await bookSpot({ data: { spotId: selSpot.id, userId, hours } }).then(() => null, (e: Error) => e);
-    setBusy(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success(`Booked spot ${selSpot.spot_number} · ${money(hours)} (simulated)`);
-    setSel(null);
-    refresh();
-  };
-  const now = simTime?.getTime() ?? 0;
-  const released = spots
-    .filter((s) => s.status === "released")
-    .map((s) => ({ s, b: bookings.find((b) => b.spot_id === s.id && b.status === "released") }))
-    .filter((x) => x.b && new Date(x.b.end_time).getTime() > now);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [done, setDone] = useState<{ n: number; end: string; total: number } | null>(null);
 
-  const book = async (spotId: string) => {
+  const spot = spots.find((s) => s.id === selId);
+  const rel = spot ? bookings.find((b) => b.spot_id === spot.id && b.status === "released") : undefined;
+  const now = simTime ?? new Date();
+  const { hours, total } = rel ? releasedPrice(now, rel.end_time) : { hours: 0, total: 0 };
+  const own = rel?.user_id === userId;
+
+  useEffect(() => {
+    if (step !== "confirm" || !spot) return;
+    setSummary(null);
+    let live = true;
+    getCauseSummary({ data: { spotId: spot.id, amount: total } }).then(
+      (r) => live && setSummary(r.text),
+      () => live && setSummary(`Your $${total} will likely support a Detroit nonprofit.`),
+    );
+    return () => { live = false; };
+  }, [step, spot?.id, total]);
+
+  const tap = (id: string, status: string) => {
+    if (status !== "released") { toast("Not available for sharing."); return; }
+    setSelId(id); setStep("sheet");
+  };
+
+  const close = () => { setSelId(null); setStep("sheet"); setDone(null); };
+
+  const pay = async () => {
+    if (!spot || !rel) return;
     setBusy(true);
-    const error = await bookSpot({ data: { spotId, userId, hours: 1 } }).then(() => null, (e: Error) => e);
+    const err = await bookSpot({ data: { spotId: spot.id, userId, hours } }).then(() => null, (e: Error) => e);
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Booked! Your payment is going to a Detroit nonprofit 💚");
+    if (err) {
+      toast.error(/booked/i.test(err.message) ? "Someone just booked this spot." : err.message);
+      refresh();
+      if (/booked|no longer/i.test(err.message)) close();
+      return;
+    }
+    setDone({ n: spot.spot_number, end: rel.end_time, total });
+    setStep("done");
     refresh();
   };
+
+  const open = selId !== null && (step === "done" || !!rel);
 
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Find a spot</h1>
-      <SpotMap spots={spots} selected={sel ?? undefined} onSelect={(x) => setSel(x.status === "empty" ? x.id : null)} />
-      {selSpot && (
-        <div className="rounded-3xl border p-5">
-          <p className="font-semibold">Spot {selSpot.spot_number} · $1/hr</p>
-          <div className="mt-3 flex items-center gap-3">
-            <Button variant="outline" size="icon" onClick={() => setHours((h) => Math.max(1, h - 1))}>−</Button>
-            <span className="w-16 text-center font-semibold">{hours}h</span>
-            <Button variant="outline" size="icon" onClick={() => setHours((h) => Math.min(12, h + 1))}>+</Button>
-            <span className="ml-auto font-display text-xl font-bold">{money(hours)}</span>
-          </div>
-          <Button className="mt-4 w-full rounded-xl" size="lg" onClick={bookEmpty} disabled={busy}>
-            Pay {money(hours)} (simulated)
-          </Button>
-        </div>
-      )}
-      <h2 className="pt-2 font-semibold">Shared spots</h2>
-      {released.length === 0 && (
-        <p className="rounded-2xl bg-muted p-5 text-center text-sm text-muted-foreground">No released spots right now. Green spots appear here live.</p>
-      )}
-      {released.map(({ s, b }) => {
-        const hrs = Math.ceil((new Date(b!.end_time).getTime() - now) / 36e5);
-        const own = b!.user_id === userId;
-        return (
-          <div key={s.id} className="rounded-3xl border-2 border-primary bg-accent p-5">
-            <div className="flex items-baseline justify-between">
-              <p className="font-display text-3xl font-bold text-accent-foreground">#{s.spot_number}</p>
-              <p className="font-display text-xl font-bold">{money(hrs)}</p>
+      <div className="flex gap-4 rounded-2xl border px-4 py-2 text-xs font-medium">
+        <Legend c="bg-spot-empty" l="Empty" />
+        <Legend c="bg-spot-booked" l="Booked" />
+        <Legend c="bg-spot-released" l="Released · bookable" />
+      </div>
+      <SpotMap spots={spots} selected={selId ?? undefined} onSelect={(s) => tap(s.id, s.status)} />
+      <p className="text-center text-sm text-muted-foreground">Tap a green spot to book time another driver shared.</p>
+
+      <Sheet open={open} onOpenChange={(o) => !o && close()}>
+        <SheetContent side="bottom" className="mx-auto max-w-md rounded-t-3xl">
+          {step === "done" && done ? (
+            <div className="space-y-4 py-4 text-center">
+              <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
+              <SheetHeader><SheetTitle className="text-center">You're parked at Spot {done.n} until {fmtTime(done.end)}.</SheetTitle>
+                <SheetDescription className="text-center">Your {money(done.total)} is going to a Detroit nonprofit.</SheetDescription></SheetHeader>
+              <Button asChild className="w-full rounded-xl" size="lg"><Link to="/" onClick={close}>Go to Park</Link></Button>
             </div>
-            <p className="text-sm text-muted-foreground">Until {fmtTime(b!.end_time)} · {hrs}h left</p>
-            <p className="mt-2 flex items-center gap-1 text-sm font-medium text-accent-foreground">
-              <Heart className="h-4 w-4 fill-current" /> 100% goes to a Detroit nonprofit
-            </p>
-            <Button className="mt-4 w-full rounded-xl" size="lg" disabled={busy || own} onClick={() => book(s.id)}>
-              {own ? "You released this spot" : `Book & donate ${money(hrs)} (simulated)`}
-            </Button>
-          </div>
-        );
-      })}
+          ) : spot && rel && step === "sheet" ? (
+            <div className="space-y-4 py-2">
+              <SheetHeader>
+                <SheetTitle>Spot {spot.spot_number} · open until {fmtTime(rel.end_time)} · $1/hr</SheetTitle>
+                <SheetDescription>100% of what you pay goes to a Detroit nonprofit.</SheetDescription>
+              </SheetHeader>
+              <Button className="w-full rounded-xl" size="lg" disabled={own || hours < 1} onClick={() => setStep("confirm")}>
+                {own ? "You released this spot" : "Book this spot"}
+              </Button>
+            </div>
+          ) : spot && rel ? (
+            <div className="space-y-4 py-2">
+              <SheetHeader>
+                <SheetTitle>Confirm booking · Spot {spot.spot_number}</SheetTitle>
+                <SheetDescription>{spot.lot_name}</SheetDescription>
+              </SheetHeader>
+              <div className="rounded-2xl bg-muted p-4 text-sm">
+                <div className="flex justify-between"><span>Time</span><span className="font-semibold">{fmtTime(now)} – {fmtTime(rel.end_time)}</span></div>
+                <div className="mt-1 flex justify-between"><span>{hours} hr × $1</span><span className="font-display text-xl font-bold">{money(total)}</span></div>
+                <p className="mt-2 text-xs text-muted-foreground">Payment is final. 100% goes to a Detroit nonprofit.</p>
+              </div>
+              <div className="rounded-2xl border-2 border-primary bg-accent p-4 text-sm text-accent-foreground">
+                <p className="mb-1 flex items-center gap-1 font-semibold"><Sparkles className="h-4 w-4" /> Where your money goes</p>
+                {summary ?? <span className="animate-pulse text-muted-foreground">Writing a quick summary…</span>}
+              </div>
+              <Button className="w-full rounded-xl" size="lg" disabled={busy} onClick={pay}>
+                <Heart className="h-4 w-4 fill-current" /> Pay {money(total)}
+              </Button>
+              <Button variant="ghost" className="w-full" onClick={() => setStep("sheet")}>Back</Button>
+            </div>
+          ) : null}
+        </SheetContent>
+      </Sheet>
     </div>
   );
+}
+
+function Legend({ c, l }: { c: string; l: string }) {
+  return <span className="flex items-center gap-1"><span className={`h-3 w-3 rounded ${c}`} /> {l}</span>;
 }
