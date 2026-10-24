@@ -43,7 +43,7 @@ function ProfilePage() {
       .from("profiles")
       .update({ interests, interest_text: text, priority_nonprofit_id: priority })
       .eq("id", userId);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Profile saved");
     refresh();
   };

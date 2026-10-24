@@ -28,21 +28,21 @@ function ParkPage() {
   const activeSpot = spots.find((s) => s.id === active?.spot_id);
 
   const release = async () => {
-    if (!active) return;
+    if (!active) return undefined;
     setBusy(true);
     const { error } = await supabase.rpc("release_booking", { _booking_id: active.id, _user_id: userId });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Spot released! If someone books it, they pay a nonprofit you choose.");
     refresh();
   };
 
   const book = async () => {
-    if (!sel) return;
+    if (!sel) return undefined;
     setBusy(true);
     const { error } = await supabase.rpc("book_spot", { _spot_id: sel.id, _user_id: userId, _hours: hours });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(`Booked spot ${sel.spot_number} · ${money(hours)} (simulated)`);
     setSel(null);
     refresh();

@@ -27,7 +27,7 @@ function ImpactPage() {
 
   const choose = async (donationId: string, npId: string) => {
     const { error } = await supabase.from("donations").update({ nonprofit_id: npId, status: "donated" }).eq("id", donationId);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(`Donated to ${npName(npId)} 💚`);
     refresh();
   };

@@ -14,9 +14,9 @@ export function SpotMap({
   mine,
 }: {
   spots: Spot[];
-  selected?: string;
-  onSelect?: (s: Spot) => void;
-  mine?: string;
+  selected?: string | undefined;
+  onSelect?: ((s: Spot) => unknown) | undefined;
+  mine?: string | undefined;
 }) {
   return (
     <div className="rounded-3xl border bg-muted p-4">

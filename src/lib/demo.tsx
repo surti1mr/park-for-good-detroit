@@ -30,7 +30,7 @@ type Ctx = {
 const DemoCtx = createContext<Ctx | null>(null);
 
 export function DemoProvider({ children }: { children: ReactNode }) {
-  const [userId, setUserIdState] = useState(DRIVERS[0].id);
+  const [userId, setUserIdState] = useState<string>(DRIVERS[0]!.id);
   const [simTime, setSimTime] = useState<Date | null>(null);
   const [spots, setSpots] = useState<Spot[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);

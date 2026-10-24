@@ -32,7 +32,7 @@ function FindPage() {
     setBusy(true);
     const { error } = await supabase.rpc("book_spot", { _spot_id: spotId, _user_id: userId, _hours: 1 });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Booked! Your payment is going to a Detroit nonprofit 💚");
     refresh();
   };
