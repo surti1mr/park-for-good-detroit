@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           end_time: string
           id: string
+          parent_booking_id: string | null
           released_at: string | null
           spot_id: string
           start_time: string
@@ -31,6 +32,7 @@ export type Database = {
           created_at?: string
           end_time: string
           id?: string
+          parent_booking_id?: string | null
           released_at?: string | null
           spot_id: string
           start_time: string
@@ -42,6 +44,7 @@ export type Database = {
           created_at?: string
           end_time?: string
           id?: string
+          parent_booking_id?: string | null
           released_at?: string | null
           spot_id?: string
           start_time?: string
@@ -49,6 +52,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_parent_booking_id_fkey"
+            columns: ["parent_booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_spot_id_fkey"
             columns: ["spot_id"]
