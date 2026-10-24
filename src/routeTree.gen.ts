@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FindRouteImport } from './routes/find'
 import { Route as ImpactRouteImport } from './routes/impact'
+import { Route as MatchRouteImport } from './routes/match'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as SignupRouteImport } from './routes/signup'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,9 +31,19 @@ const ImpactRoute = ImpactRouteImport.update({
   path: '/impact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MatchRoute = MatchRouteImport.update({
+  id: '/match',
+  path: '/match',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -39,34 +51,42 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/find': typeof FindRoute
   '/impact': typeof ImpactRoute
+  '/match': typeof MatchRoute
   '/profile': typeof ProfileRoute
+  '/signup': typeof SignupRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/find': typeof FindRoute
   '/impact': typeof ImpactRoute
+  '/match': typeof MatchRoute
   '/profile': typeof ProfileRoute
+  '/signup': typeof SignupRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/find': typeof FindRoute
   '/impact': typeof ImpactRoute
+  '/match': typeof MatchRoute
   '/profile': typeof ProfileRoute
+  '/signup': typeof SignupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/find' | '/impact' | '/profile'
+  fullPaths: '/' | '/find' | '/impact' | '/match' | '/profile' | '/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/find' | '/impact' | '/profile'
-  id: '__root__' | '/' | '/find' | '/impact' | '/profile'
+  to: '/' | '/find' | '/impact' | '/match' | '/profile' | '/signup'
+  id: '__root__' | '/' | '/find' | '/impact' | '/match' | '/profile' | '/signup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FindRoute: typeof FindRoute
   ImpactRoute: typeof ImpactRoute
+  MatchRoute: typeof MatchRoute
   ProfileRoute: typeof ProfileRoute
+  SignupRoute: typeof SignupRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,11 +112,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImpactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/match': {
+      id: '/match'
+      path: '/match'
+      fullPath: '/match'
+      preLoaderRoute: typeof MatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -106,7 +140,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FindRoute: FindRoute,
   ImpactRoute: ImpactRoute,
+  MatchRoute: MatchRoute,
   ProfileRoute: ProfileRoute,
+  SignupRoute: SignupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

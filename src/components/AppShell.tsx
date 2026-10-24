@@ -14,7 +14,9 @@ const NAV = [
 ] as const;
 
 function DemoPanel({ onClose }: { onClose: () => void }) {
-  const { userId, setUserId, simTime, refresh } = useDemo();
+  const { userId, setUserId, simTime, refresh, profiles } = useDemo();
+  const others = profiles.filter((p) => !DRIVERS.some((d) => d.id === p.id) && p.email !== "other@demo.app");
+  const roles = [...DRIVERS, ...others.map((p) => ({ id: p.id, label: p.name }))];
   const base = simTime ?? new Date();
   const curHour = simTime ? Number(simTime.toLocaleString("en-US", { hour: "numeric", hour12: false, timeZone: "America/Detroit" })) : -1;
   const setClock = async (iso: string, label: string) => {
@@ -30,7 +32,7 @@ function DemoPanel({ onClose }: { onClose: () => void }) {
       </div>
       <p className="mb-1 text-xs text-muted-foreground">Role</p>
       <div className="mb-4 grid grid-cols-2 gap-2">
-        {DRIVERS.map((d) => (
+        {roles.map((d) => (
           <button
             key={d.id}
             onClick={() => setUserId(d.id)}
@@ -39,9 +41,12 @@ function DemoPanel({ onClose }: { onClose: () => void }) {
               userId === d.id ? "border-primary bg-accent text-accent-foreground" : "bg-background",
             )}
           >
-            {d.label}
+            <span className="block truncate">{d.label}</span>
           </button>
         ))}
+        <Link to="/signup" onClick={onClose} className="col-span-2 rounded-xl border border-dashed px-3 py-2 text-center text-sm font-medium text-primary">
+          + Sign up a new user
+        </Link>
       </div>
       <p className="mb-1 text-xs text-muted-foreground">Clock · {simTime ? fmtTime(simTime) : "…"}</p>
       <div className="grid grid-cols-3 gap-2">
@@ -72,8 +77,8 @@ function DemoPanel({ onClose }: { onClose: () => void }) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const { userId, simTime } = useDemo();
-  const who = DRIVERS.find((d) => d.id === userId)?.label;
+  const { userId, simTime, profiles } = useDemo();
+  const who = profiles.find((p) => p.id === userId)?.name ?? DRIVERS.find((d) => d.id === userId)?.label;
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background">
       <header className="relative sticky top-0 z-40 flex items-center justify-between border-b bg-background/90 px-4 py-3 backdrop-blur">

@@ -41,7 +41,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem("pif-role");
-    if (saved && DRIVERS.some((d) => d.id === saved)) setUserIdState(saved);
+    if (saved) setUserIdState(saved);
   }, []);
 
   const setUserId = (id: string) => {
