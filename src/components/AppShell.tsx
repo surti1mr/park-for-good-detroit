@@ -77,8 +77,7 @@ function DemoPanel({ onClose }: { onClose: () => void }) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const { userId, simTime } = useDemo();
-  const { profiles } = useDemo();
+  const { userId, simTime, profiles } = useDemo();
   const who = profiles.find((p) => p.id === userId)?.name ?? DRIVERS.find((d) => d.id === userId)?.label;
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background">
