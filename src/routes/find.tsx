@@ -22,6 +22,19 @@ export const Route = createFileRoute("/find")({
 function FindPage() {
   const { userId, simTime, spots, bookings, refresh } = useDemo();
   const [busy, setBusy] = useState(false);
+  const [sel, setSel] = useState<string | null>(null);
+  const [hours, setHours] = useState(2);
+  const selSpot = spots.find((x) => x.id === sel && x.status === "empty");
+  const bookEmpty = async () => {
+    if (!selSpot) return;
+    setBusy(true);
+    const error = await bookSpot({ data: { spotId: selSpot.id, userId, hours } }).then(() => null, (e: Error) => e);
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Booked spot ${selSpot.spot_number} · ${money(hours)} (simulated)`);
+    setSel(null);
+    refresh();
+  };
   const now = simTime?.getTime() ?? 0;
   const released = spots
     .filter((s) => s.status === "released")
@@ -39,8 +52,23 @@ function FindPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Released spots</h1>
-      <SpotMap spots={spots} />
+      <h1 className="text-2xl font-bold">Find a spot</h1>
+      <SpotMap spots={spots} selected={sel ?? undefined} onSelect={(x) => setSel(x.status === "empty" ? x.id : null)} />
+      {selSpot && (
+        <div className="rounded-3xl border p-5">
+          <p className="font-semibold">Spot {selSpot.spot_number} · $1/hr</p>
+          <div className="mt-3 flex items-center gap-3">
+            <Button variant="outline" size="icon" onClick={() => setHours((h) => Math.max(1, h - 1))}>−</Button>
+            <span className="w-16 text-center font-semibold">{hours}h</span>
+            <Button variant="outline" size="icon" onClick={() => setHours((h) => Math.min(12, h + 1))}>+</Button>
+            <span className="ml-auto font-display text-xl font-bold">{money(hours)}</span>
+          </div>
+          <Button className="mt-4 w-full rounded-xl" size="lg" onClick={bookEmpty} disabled={busy}>
+            Pay {money(hours)} (simulated)
+          </Button>
+        </div>
+      )}
+      <h2 className="pt-2 font-semibold">Shared spots</h2>
       {released.length === 0 && (
         <p className="rounded-2xl bg-muted p-5 text-center text-sm text-muted-foreground">No released spots right now. Green spots appear here live.</p>
       )}
