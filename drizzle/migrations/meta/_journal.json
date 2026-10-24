@@ -36,6 +36,13 @@
       "when": 1792860064160,
       "tag": "0004_donation_choice",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792861232644,
+      "tag": "0005_repeatable_demo_reset",
+      "breakpoints": true
     }
   ]
 }
