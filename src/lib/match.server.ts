@@ -47,7 +47,8 @@ export async function matchNonprofits(interests: string[], interestText: string,
   });
   const list = nonprofits.map((n) => ({ id: n.id, name: n.name, description: n.description, tags: n.tags }));
   const result = streamText({
-    model: provider.responses("openai/gpt-6-astra"),
+    // Cast bridges a duplicate @ai-sdk/provider type version between packages (runtime-compatible).
+    model: provider.responses("openai/gpt-6-astra") as unknown as Parameters<typeof streamText>[0]["model"],
     instructions:
       "You match a person to Detroit nonprofits. You may ONLY choose from the provided list, identified by its exact id. Never invent organizations. Return exactly 3 matches, best first. Each reason is one short sentence (under 20 words) explaining the fit using ONLY the nonprofit's description and tags and the person's stated interests. No statistics, numbers, or facts not in the description.",
     messages: [
