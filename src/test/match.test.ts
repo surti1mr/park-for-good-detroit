@@ -11,3 +11,15 @@ describe("filterMatches", () => {
     expect(filterMatches(nps.map((n) => ({ id: n.id, reason: "r" })), nps)).toHaveLength(3);
   });
 });
+
+import { completeRanking } from "@/lib/match.server";
+describe("completeRanking", () => {
+  const nps = [
+    { id: "a", name: "A", description: "da", tags: [] },
+    { id: "b", name: "B", description: "db", tags: [] },
+  ];
+  it("drops unknown ids and includes every real nonprofit once", () => {
+    const r = completeRanking([{ id: "fake", reason: "x" }, { id: "b", reason: "rb" }, { id: "b", reason: "dup" }], nps);
+    expect(r.map((m) => m.id)).toEqual(["b", "a"]);
+  });
+});

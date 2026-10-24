@@ -97,3 +97,45 @@ export async function summarizeCause(np: { name: string; description: string; ta
   });
   return (await result.text).trim();
 }
+
+/** Rank ALL nonprofits for a user. Unknown ids discarded; any missing ones appended so every real org appears once. */
+export function completeRanking(raw: Match[], nonprofits: NP[]): Match[] {
+  const valid = new Map(nonprofits.map((n) => [n.id, n]));
+  const seen = new Set<string>();
+  const out: Match[] = [];
+  for (const m of raw) {
+    if (!valid.has(m.id) || seen.has(m.id)) continue;
+    seen.add(m.id);
+    out.push({ id: m.id, reason: m.reason.trim().slice(0, 200) });
+  }
+  for (const n of nonprofits) if (!seen.has(n.id)) out.push({ id: n.id, reason: n.description });
+  return out;
+}
+
+export async function rankNonprofits(interests: string[], interestText: string, nonprofits: NP[]) {
+  const apiKey = process.env["LOVABLE_API_KEY"];
+  if (!apiKey) throw new Error("AI is not configured");
+  const provider = createOpenAI({
+    baseURL: "https://ai.gateway.lovable.dev/v1",
+    apiKey,
+    headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+  });
+  const list = nonprofits.map((n) => ({ id: n.id, name: n.name, description: n.description, tags: n.tags }));
+  const result = streamText({
+    model: provider.responses("openai/gpt-6-astra") as unknown as Parameters<typeof streamText>[0]["model"],
+    instructions:
+      "Rank EVERY provided Detroit nonprofit for this person, best fit first, using only their exact ids. Never invent organizations. Each reason is one short sentence (under 20 words) using ONLY the nonprofit's description and tags. No statistics or numbers.",
+    messages: [{ role: "user", content: `Interests: ${interests.join(", ") || "none"}\nIn their words: ${interestText || "(nothing)"}\n\nNonprofits:\n${JSON.stringify(list)}` }],
+    output: Output.object({ schema }),
+    providerOptions: {
+      openai: { store: false, forceReasoning: true, reasoningEffort: "low", reasoningSummary: "auto", include: ["reasoning.encrypted_content"] },
+    },
+  });
+  let raw: Match[] = [];
+  try {
+    raw = (await result.output).matches;
+  } catch (e) {
+    if (!NoObjectGeneratedError.isInstance(e)) throw e;
+  }
+  return completeRanking(raw, nonprofits);
+}
