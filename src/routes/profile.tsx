@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { saveProfile } from "@/lib/api.functions";
 import { Button } from "@/components/ui/button";
 import { useDemo } from "@/lib/demo";
 import { cn } from "@/lib/utils";
@@ -39,10 +39,7 @@ function ProfilePage() {
   );
 
   const save = async () => {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ interests, interest_text: text, priority_nonprofit_id: priority })
-      .eq("id", userId);
+    const error = await saveProfile({ data: { userId, interests, interestText: text, priority } }).then(() => null, (e: Error) => e);
     if (error) { toast.error(error.message); return; }
     toast.success("Profile saved");
     refresh();

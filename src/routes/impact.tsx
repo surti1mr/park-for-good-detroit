@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { chooseDonation } from "@/lib/api.functions";
 import { money, useDemo } from "@/lib/demo";
 
 export const Route = createFileRoute("/impact")({
@@ -26,7 +26,7 @@ function ImpactPage() {
   const sorted = [...nonprofits].sort((a, b) => (a.id === me?.priority_nonprofit_id ? -1 : b.id === me?.priority_nonprofit_id ? 1 : 0));
 
   const choose = async (donationId: string, npId: string) => {
-    const { error } = await supabase.from("donations").update({ nonprofit_id: npId, status: "donated" }).eq("id", donationId);
+    const error = await chooseDonation({ data: { donationId, nonprofitId: npId } }).then(() => null, (e: Error) => e);
     if (error) { toast.error(error.message); return; }
     toast.success(`Donated to ${npName(npId)} 💚`);
     refresh();

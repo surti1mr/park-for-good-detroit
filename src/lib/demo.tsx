@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getState } from "@/lib/api.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 type T = Database["public"]["Tables"];
@@ -50,38 +50,25 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   };
 
   const refresh = useCallback(async () => {
-    const [c, s, b, d, n, p] = await Promise.all([
-      supabase.from("demo_clock").select("*").eq("id", 1).single(),
-      supabase.from("spots").select("*").order("spot_number"),
-      supabase.from("bookings").select("*").order("created_at", { ascending: false }),
-      supabase.from("donations").select("*").order("created_at", { ascending: false }),
-      supabase.from("nonprofits").select("*").order("name"),
-      supabase.from("profiles").select("*"),
-    ]);
-    if (c.data) setSimTime(new Date(c.data.sim_time));
-    setSpots(s.data ?? []);
-    setBookings(b.data ?? []);
-    setDonations(d.data ?? []);
-    setNonprofits(n.data ?? []);
-    setProfiles(p.data ?? []);
+    try {
+      const st = await getState();
+      setSimTime(new Date(st.simTime));
+      setSpots(st.spots);
+      setBookings(st.bookings);
+      setDonations(st.donations);
+      setNonprofits(st.nonprofits);
+      setProfiles(st.profiles);
+    } catch (e) {
+      console.error(e);
+    }
     setLoading(false);
   }, []);
 
+  // Poll so other devices' changes show up within ~2 seconds.
   useEffect(() => {
     refresh();
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const ch = supabase.channel(`pif-${Math.random().toString(36).slice(2)}`);
-    for (const table of ["spots", "bookings", "donations", "demo_clock", "profiles"]) {
-      ch.on("postgres_changes", { event: "*", schema: "public", table }, () => {
-        clearTimeout(timer);
-        timer = setTimeout(refresh, 150);
-      });
-    }
-    ch.subscribe();
-    return () => {
-      clearTimeout(timer);
-      supabase.removeChannel(ch);
-    };
+    const t = setInterval(refresh, 2000);
+    return () => clearInterval(t);
   }, [refresh]);
 
   return (
