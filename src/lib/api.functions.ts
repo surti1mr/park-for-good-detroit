@@ -33,12 +33,12 @@ export const getState = createServerFn({ method: "GET" }).handler(async () => {
     s.from("profiles").select("*"),
   ]);
   return {
-    simTime: check(c).sim_time,
-    spots: check(spots),
-    bookings: check(bookings),
-    donations: check(donations),
-    nonprofits: check(nonprofits),
-    profiles: check(profiles),
+    simTime: check(c)!.sim_time,
+    spots: check(spots) ?? [],
+    bookings: check(bookings) ?? [],
+    donations: check(donations) ?? [],
+    nonprofits: check(nonprofits) ?? [],
+    profiles: check(profiles) ?? [],
   };
 });
 
