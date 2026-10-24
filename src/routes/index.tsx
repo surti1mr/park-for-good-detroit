@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { fmtTime, money, useDemo } from "@/lib/demo";
+import { DonationCards } from "@/components/DonationCards";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -69,6 +70,8 @@ function ParkPage() {
         <span className="text-muted-foreground">Current time</span>
         <span className="ml-auto font-semibold">{simTime ? fmtTime(simTime) : "…"}</span>
       </div>
+
+      <DonationCards />
 
       {!session || !spot ? (
         <div className="rounded-3xl border p-8 text-center">
